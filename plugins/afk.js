@@ -25,9 +25,9 @@ function secondsToHms(d) {
     var m = Math.floor(d % 3600 / 60);
     var s = Math.floor(d % 3600 % 60);
 
-    var hDisplay = h > 0 ? h + (h == 1 ? " saat, " : " saat, ") : "";
-    var mDisplay = m > 0 ? m + (m == 1 ? " dakika, " : " dakika, ") : "";
-    var sDisplay = s > 0 ? s + (s == 1 ? " saniye" : " saniye") : "";
+    var hDisplay = h > 0 ? h + (h == 1 ? " " + Lang.HOUR + ", " : " " + Lang.HOUR + ", ") : "";
+    var mDisplay = m > 0 ? m + (m == 1 ? " " + Lang.MINUTE + ", " : " " + Lang.MINUTE + ", ") : "";
+    var sDisplay = s > 0 ? s + (s == 1 ? " " + Lang.SECOND : " " + Lang.SECOND) : "";
     return hDisplay + mDisplay + sDisplay; 
 }
 
@@ -37,32 +37,32 @@ Asena.addCommand({on: 'text', fromMe: false, deleteCommand: false}, (async (mess
         if (message.jid.includes('-') && (message.mention !== false && message.mention.length !== 0)) {
             message.mention.map(async (jid) => {
                 if (message.client.user.jid.split('@')[0] === jid.split('@')[0]) {
-                    await message.sendMessage(Lang.AFK_TEXT + '\n' + 
-                    (AFK.reason !== false ? '\n*' + Lang.AFK_TEXT + ':* ```' + AFK.reason + '```' : '') + 
+                    await message.client.sendMessage(message.jid,Lang.AFK_TEXT + '\n' + 
+                    (AFK.reason !== false ? '\n*' + Lang.REASON + ':* ```' + AFK.reason + '```' : '') + 
                     (AFK.lastseen !== 0 ? '\n*' + Lang.LAST_SEEN + ':* ```' + secondsToHms(Math.round((new Date()).getTime() / 1000) - AFK.lastseen) + ' önce```' : ''), MessageType.text, {quoted: message.data});            
                 }
             })
         } else if (message.jid.includes('-') && message.reply_message !== false) {
             if (message.reply_message.jid.split('@')[0] === message.client.user.jid.split('@')[0]) {
-                await message.sendMessage(Lang.AFK_TEXT + '\n' + 
-                    (AFK.reason !== false ? '\n*' + Lang.AFK_TEXT + ':* ```' + AFK.reason + '```' : '') + 
+                await message.client.sendMessage(message.jid,Lang.AFK_TEXT + '\n' + 
+                    (AFK.reason !== false ? '\n*' + Lang.REASON + ':* ```' + AFK.reason + '```' : '') + 
                     (AFK.lastseen !== 0 ? '\n*' + Lang.LAST_SEEN + ':* ```' + secondsToHms(Math.round((new Date()).getTime() / 1000) - AFK.lastseen) + ' önce```' : ''), MessageType.text, {quoted: message.data});
             }
         } else {
-            await message.sendMessage(Lang.AFK_TEXT + '\n' + 
-            (AFK.reason !== false ? '\n*' + Lang.AFK_TEXT + ':* ```' + AFK.reason + '```' : '') + 
+            await message.client.sendMessage(message.jid,Lang.AFK_TEXT + '\n' + 
+            (AFK.reason !== false ? '\n*' + Lang.REASON + ':* ```' + AFK.reason + '```' : '') + 
             (AFK.lastseen !== 0 ? '\n*' + Lang.LAST_SEEN + ':* ```' + secondsToHms(Math.round((new Date()).getTime() / 1000) - AFK.lastseen) + ' önce```' : ''), MessageType.text, {quoted: message.data});    
         }
     }
 }));
 
 Asena.addCommand({on: 'text', fromMe: true, deleteCommand: false}, (async (message, match) => {
-    if (AFK.isAfk && !message.message.includes(Lang.IM_AFK_NOMD) && !message.message.includes(Lang.AFK_TEXT_NOMD) &&  !message.message.includes('*-- HATA RAPORU [WHATSASENA] --*')) {
+    if (AFK.isAfk && !message.id.startsWith('3EB0')) {
         AFK.lastseen = 0;
         AFK.reason = false;
         AFK.isAfk = false;
 
-        await message.sendMessage(Lang.IM_NOT_AFK);
+        await message.client.sendMessage(message.jid,Lang.IM_NOT_AFK,MessageType.text);
     }
 }));
 
@@ -72,7 +72,8 @@ Asena.addCommand({pattern: 'afk ?(.*)', fromMe: true, deleteCommand: false, desc
         if (match[1] !== '') { AFK.reason = match[1]; }
         AFK.isAfk = true;
 
-        await message.sendMessage(Lang.IM_AFK + (AFK.reason !== false ? ('\n*' + Lang.REASON +':* ```' + AFK.reason + '```') : ''));
+        await message.client.sendMessage(message.jid,Lang.IM_AFK + (AFK.reason !== false ? ('\n*' + Lang.REASON +':* ```' + AFK.reason + '```') : ''),MessageType.text);
     }
 }));
 
+module.exports = { secondsToHms };

@@ -12,8 +12,12 @@
             "description": "Qr.Js ile oluşturduğunuz özel session kodu.",
             "required": true
         },
+        "SUDO": {
+            "description": "Sudo mode; Your number must be an international number. So you should have your number after the country code. Example: 1205xxxxxxxxx (USA number +1)",
+            "required": false
+        },
         "LANGUAGE": {
-            "description": "Botun dili. Bot language. Azerice => az, English => en, Türkçe => tr",
+            "description": "Bot language. Azerice => az, English => en, Türkçe => tr, Malayalam => ml, Hindi => HI, Indonesia => IN, Español => ES",
             "required": true,
             "value": "TR"
         },
@@ -46,11 +50,16 @@
             "value": "false"
         },
         "REMOVE_BG_API_KEY": {
-            "description": "Fotoğrafların arkaplanını kaldırır.",
+            "description": "Fotoğrafların arkaplanını kaldırır. https://remove.bg",
             "required": false
         },
         "NO_ONLINE": {
             "description": "Çevrimiçi görünmek istemiyorsanız true yazın.",
+            "required": false,
+            "value": "true"
+        },
+        "COFFEEHOUSE_API_KEY": {
+            "description": "CoffeeHouse API Key. Need for Lydia. https://coffeehouse.intellivoid.net/",
             "required": false,
             "value": "true"
         }

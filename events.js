@@ -15,7 +15,7 @@ function addCommand(info, func) {
     var types = ['photo', 'image', 'text', 'message'];
 
     var infos = {
-        fromMe: info['fromMe'] === undefined ? true : info['fromMe'],
+        fromMe: info['fromMe'] === undefined ? true : info['fromMe'], // Or Sudo
         onlyGroup: info['onlyGroup'] === undefined ? false : info['onlyGroup'],
         onlyPinned: info['onlyPinned'] === undefined ? false : info['onlyPinned'],
         onlyPm: info['onlyPm'] === undefined ? false : info['onlyPm'],
@@ -39,7 +39,8 @@ function addCommand(info, func) {
         infos.pattern = new RegExp((info['handler'] === undefined || info['handler'] === true ? config.HANDLERS : '') + info.pattern, (info['flags'] !== undefined ? info['flags'] : ''));
     }
 
-    return Commands.push(infos);
+    Commands.push(infos);
+    return infos;
 }
 
 module.exports = {

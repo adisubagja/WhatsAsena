@@ -15,6 +15,7 @@ const {WAConnection, MessageType, Mimetype, Presence} = require('@adiwajshing/ba
 const {Message, StringSession, Image, Video} = require('./whatsasena/');
 const { DataTypes } = require('sequelize');
 const { GreetingsDB, getMessage } = require("./plugins/sql/greetings");
+const got = require('got');
 
 // Sql
 const WhatsAsenaDB = config.DATABASE.define('WhatsAsena', {
@@ -34,12 +35,29 @@ fs.readdirSync('./plugins/sql/').forEach(plugin => {
     }
 });
 
+const plugindb = require('./plugins/sql/plugin');
+
 // Yalnızca bir kolaylık. https://stackoverflow.com/questions/4974238/javascript-equivalent-of-pythons-format-function //
 String.prototype.format = function () {
     var i = 0, args = arguments;
     return this.replace(/{}/g, function () {
       return typeof args[i] != 'undefined' ? args[i++] : '';
     });
+};
+
+if (!Date.now) {
+    Date.now = function() { return new Date().getTime(); }
+}
+
+Array.prototype.remove = function() {
+    var what, a = arguments, L = a.length, ax;
+    while (L && this.length) {
+        what = a[--L];
+        while ((ax = this.indexOf(what)) !== -1) {
+            this.splice(ax, 1);
+        }
+    }
+    return this;
 };
 
 async function whatsAsena () {
@@ -53,7 +71,7 @@ async function whatsAsena () {
     const conn = new WAConnection();
     const Session = new StringSession();
 
-    conn.logger.level = 'warn';
+    conn.logger.level = config.DEBUG ? 'debug' : 'warn';
     var nodb;
 
     if (StrSes_Db.length < 1) {
@@ -65,7 +83,7 @@ async function whatsAsena () {
 
     conn.on ('credentials-updated', async () => {
         console.log(
-            chalk.blueBright.italic('✅ Giriş bilgileri güncellendi!')
+            chalk.blueBright.italic('✅ Login information updated!')
         );
 
         const authInfo = conn.base64EncodedAuthInfo();
@@ -80,33 +98,49 @@ async function whatsAsena () {
         console.log(`${chalk.green.bold('Whats')}${chalk.blue.bold('Asena')}
 ${chalk.white.bold('Version:')} ${chalk.red.bold(config.VERSION)}
 
-${chalk.blue.italic('ℹ️  WhatsApp\'a bağlanılıyor... Lütfen bekleyin.')}`);
+${chalk.blue.italic('ℹ️ Connecting to WhatsApp... Please wait.')}`);
     });
     
 
-    conn.on('open', () => {
+    conn.on('open', async () => {
         console.log(
-            chalk.green.bold('✅ Giriş başarılı!')
+            chalk.green.bold('✅ Login successful!')
         );
-    
+
         console.log(
-            chalk.blueBright.italic('⬇️  Pluginler yükleniyor...')
+            chalk.blueBright.italic('⬇️ Installing external plugins...')
         );
-    
+
+        var plugins = await plugindb.PluginDB.findAll();
+        plugins.map(async (plugin) => {
+            if (!fs.existsSync('./plugins/' + plugin.dataValues.name + '.js')) {
+                console.log(plugin.dataValues.name);
+                var response = await got(plugin.dataValues.url);
+                if (response.statusCode == 200) {
+                    fs.writeFileSync('./plugins/' + plugin.dataValues.name + '.js', response.body);
+                    require('./plugins/' + plugin.dataValues.name + '.js');
+                }     
+            }
+        });
+
+        console.log(
+            chalk.blueBright.italic('⬇️  Installing plugins...')
+        );
+
         fs.readdirSync('./plugins').forEach(plugin => {
             if(path.extname(plugin).toLowerCase() == '.js') {
                 require('./plugins/' + plugin);
             }
         });
-    
+
         console.log(
-            chalk.blueBright.italic('✅ Pluginler yüklendi!')
+            chalk.green.bold('✅ Plugins installed!')
         );
     });
     
     conn.on('message-new', async msg => {
         if (msg.key && msg.key.remoteJid == 'status@broadcast') return;
-        
+
         if (config.NO_ONLINE) {
             await conn.updatePresence(msg.key.remoteJid, Presence.unavailable);
         }
@@ -153,8 +187,10 @@ ${chalk.blue.italic('ℹ️  WhatsApp\'a bağlanılıyor... Lütfen bekleyin.')}
 
                     let sendMsg = false;
                     var chat = conn.chats.get(msg.key.remoteJid)
-                    
-                    if (command.fromMe === msg.key.fromMe || (command.fromMe === false && !msg.key.fromMe)) {
+                        
+                    if ((config.SUDO !== false && msg.key.fromMe === false && command.fromMe === true &&
+                        (msg.participant && config.SUDO.includes(',') ? config.SUDO.split(',').includes(msg.participant.split('@')[0]) : msg.participant.split('@')[0] == config.SUDO || config.SUDO.includes(',') ? config.SUDO.split(',').includes(msg.key.remoteJid.split('@')[0]) : msg.key.remoteJid.split('@')[0] == config.SUDO)
+                    ) || command.fromMe === msg.key.fromMe || (command.fromMe === false && !msg.key.fromMe)) {
                         if (command.onlyPinned && chat.pin === undefined) return;
                         if (!command.onlyPm === chat.jid.includes('-')) sendMsg = true;
                         else if (command.onlyGroup === chat.jid.includes('-')) sendMsg = true;
@@ -184,13 +220,23 @@ ${chalk.blue.italic('ℹ️  WhatsApp\'a bağlanılıyor... Lütfen bekleyin.')}
                         try {
                             await command.function(whats, match);
                         } catch (error) {
-                            await conn.sendMessage(conn.user.jid, '*-- HATA RAPORU [WHATSASENA] --*' + 
-                            '\n*WhatsAsena bir hata gerçekleşti!*'+
-                            '\n_Bu hata logunda numaranız veya karşı bir tarafın numarası olabilir. Lütfen buna dikkat edin!_' +
-                            '\n_Yardım için Telegram grubumuza yazabilirsiniz._' +
-                            '\n_Bu mesaj sizin numaranıza (kaydedilen mesajlar) gitmiş olmalıdır._\n\n' +
-                            '*Gerçekleşen Hata:* ```' + error + '```\n\n'
-                            , MessageType.text);
+                            if (config.LANG == 'TR' || config.LANG == 'AZ') {
+                                await conn.sendMessage(conn.user.jid, '*-- HATA RAPORU [WHATSASENA] --*' + 
+                                    '\n*WhatsAsena bir hata gerçekleşti!*'+
+                                    '\n_Bu hata logunda numaranız veya karşı bir tarafın numarası olabilir. Lütfen buna dikkat edin!_' +
+                                    '\n_Yardım için Telegram grubumuza yazabilirsiniz._' +
+                                    '\n_Bu mesaj sizin numaranıza (kaydedilen mesajlar) gitmiş olmalıdır._\n\n' +
+                                    '*Gerçekleşen Hata:* ```' + error + '```\n\n'
+                                    , MessageType.text);
+                            } else {
+                                await conn.sendMessage(conn.user.jid, '*-- ERROR REPORT [WHATSASENA] --*' + 
+                                    '\n*WhatsAsena an error has occurred!*'+
+                                    '\n_This error log may include your number or the number of an opponent. Please be careful with it!_' +
+                                    '\n_You can write to our Telegram group for help._' +
+                                    '\n_This message should have gone to your number (saved messages)._\n\n' +
+                                    '*Error:* ```' + error + '```\n\n'
+                                    , MessageType.text);
+                            }
                         }
                     }
                 }

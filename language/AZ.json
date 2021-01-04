@@ -7,7 +7,22 @@
         "_asena": {
             "COMMAND": "Əmr",
             "DESC": "Açığlama",
-            "EXAMPLE": "Nümunə"
+            "EXAMPLE": "Nümunə",
+            "NOT_FOUND": "*Belə bir əmr tapa bilmədim*"
+        },
+        "_plugin": {
+            "INSTALL_DESC": "Plugin quraşdırır.",
+            "NEED_URL": "Zəhmət olmasa bir URL daxil edin! Nümunə:",
+            "INVALID_URL": "```Xahiş edirəm etibarlı bir URL daxil edin!```",
+            "INVALID_PLUGIN": "*❌ Plagininiz səhvdir!*\n*Xeta:*",
+            "INSTALLED": "*✅ Plugin uğurla quraşdırıldı!*",
+            "PLUGIN_DESC": "Qurduğunuz plaginləri göstərir.",
+            "INSTALLED_FROM_REMOTE": "*Xaricdən qurduğunuz plaginlər:*\n",
+            "NO_PLUGIN": "*Xarici plaginlər quraşdırmamışsınız!*",
+            "REMOVE_DESC": "Plugin çıxarır.",
+            "NEED_PLUGIN": "```Zəhmət olmasa bir Plugin daxil edin! Nümunə: .plugin __test```",
+            "NOT_FOUND_PLUGIN": "```Bəlkə belə bir plagin quraşdırmısınız, ya da yox. Ancaq əmin deyil ki, indi deyil.```",
+            "DELETED": "*✅ Modul uğurla silindi! Dəyişikliklərin qüvvəyə minməsi üçün yenidən başlamalısınız..*"
         },
         "admin": {
             "BAN_DESC": "Grupdan şəxsi banlayır. Cavap verin (reply) yada əmrin yanına şəxs adı yazın",
@@ -27,7 +42,7 @@
             "UNMUTE_DESC": "Grup söhbətini açar. Hərkəs mesaj göndərə bilər.",
             "UNMUTED": "```Grup söhbəti açıldı!```",
             "INVITE_DESC": "Grupun dəvət linkini gətirir.",
-            "INVITE": "``` Dəvət linki: ```"
+            "INVITE": "```Dəvət linki:```"
         },
         "afk": {
             "AFK_DESC": "Sizi AFK edər.",
@@ -45,6 +60,30 @@
         "evaluators": {
             "TERM_DESC": "Server’də shellində əmr işlətməyinizə imkan verər.",
             "GIVE_ME_CODE": "*Mənə bir kod ver!*"
+        },
+        "nekobin": {
+            "NEKO_DESC": "Cavablandırılan mesajlar nekobin.com saytına əlavə olunacaq",
+            "NEED_REPLY": "```Xaiş edirəm bir mesaja cavap verin!```",
+            "MUST_TEXT": "```Cavab mətn olmalıdır```"
+        },
+        "heroku": {
+            "RESTART_DESC": "WhatsAsena-nı yenidən başladın",
+            "RESTART_MSG": "```yenidən başladır ...```",
+            "SHUTDOWN_DESC": "WhatsAsena-nı söndürün",
+            "SHUTDOWN_MSG": "```söndürmək ⛔```",
+            "DYNO_DESC": "Heroku dyno istifadəsini yoxlayın",
+            "DYNO_TOTAL": "```Ümumi kvota```",
+            "DYNO_USED": "```Kota istifadə edildi```",
+            "PERCENTAGE": "```faiz```",
+            "DYNO_LEFT": "```qalıq balans```",
+            "SETVAR_DESC": "dəsti heroku config var",
+            "SET_SUCCESS": "Uğurla quruldu ```{} ➜ {}```",
+            "KEY_VAL_MISSING": "```Ya key və ya value yoxdur```",
+            "INVALID": "```Yanlış key:value formatı```",
+            "GETVAR_DESC": "almaq heroku config var",
+            "DELVAR_DESC": "Sil heroku config var",
+            "DEL_SUCCESS": "```{} uğurla silindi```",
+            "NOT_FOUND": "```bu açar üçün heç bir nəticə tapılmadı```"           
         },
         "filters": {
             "FILTER_DESC": "Filter əlavə edər. Yazdığın filter'i biri yazsa, yazdığınız cavabı göndərər. Əgər sadəcə filter yazsanız, yazılan filter'ləri göstərər.",
@@ -71,12 +110,42 @@
             "GOODBYE_DELETED": "*✅ Sağollaşma mesajı müvəffəqiyyətlə silindi!*",
             "GOODBYE_SETTED": "*✅ Sağollaşma mesajı müvəffəqiyyətlə düzəldildi!*"
         },
+        
         "profile": {
             "KICKME_DESC": "Yazdığınız grupdan sizi çıxardar.",
             "KICKME": "```Görüşənədək! Mən gedirəm 🤠```",
             "PP_DESC": "Cavabladığınız şəkili profil şəkliniz edər.",
             "NEED_PHOTO": "*Mənə bir şəkil ver!*",
-            "PPING": "```Profil şəkili dəyişdirilir...```"
+            "PPING": "```Profil şəkili dəyişdirilir...```",
+            "BLOCK_DESC": "İstifadəçini bloklayın.",
+            "UNBLOCK_DESC": "İstifadəçinin blokdan çıxarılması.",
+            "BLOCKED": "bloklandı",
+            "UNBLOCKED": "blokdan çıxarıldı",
+            "BLOCKED_UPPER": "Blok edildi!",
+            "UNBLOCKED_UPPER": "Blokdan çıxarıldı.",
+            "NEED_USER": "Mənə bir istifadəçi verin!"
+        },
+        "ocr": {
+            "OCR_DESC": "Yanıt verdiğiniz fotoğraftaki yazıları okur.",
+            "NEED_REPLY": "*Bir fotoğrafa yanıt verin!*",
+            "DOWNLOADING": "```Medya indiriliyor & okunuyor...```",
+            "ERROR": "```Bunu okuyamadım :/```\n*Hata:*```{}```",
+            "RESULT": "*Dil:* ```{}```\n*İşte okuduklarım:* ```{}```"
+        },
+        "lydia": {
+            "ADDLYDIA_DESC": "Lydia botu aktivləşdirir.",
+            "NEED_REPLY": "```Zəhmət olmasa bir istifadəçinin mesajına cavab verin!```",
+            "COFFEEHOUSE": "```Coffehouse API Açarını təyin etməmisiniz!```",
+            "ENABLED_LYDIA": "```Lydia bu istifadəçi üçün aktivləşdirilib!```",
+            "RMLYDIA_DESC": "Lydia botunu istifadəçi üçün deaktiv edir.",
+            "ALREADY_EMPTY": "```İstifadəçi siyahınız artıq boşdur!```",
+            "NOT_ADDED": "```Bu istifadəçini hələ əlavə etməmisiniz!```",
+            "DISABLED": "```Lydia bu istifadəçi üçün deaktiv edilmişdir!``"
+        },
+        "memes": {
+            "MEMES_DESC": "Yanıt verdiğiniz fotoğrafa yazdığınız yazıyı ekler.",
+            "NEED_REPLY": "*Bir fotoğraf veya videoya yanıt verin!*",
+            "DOWNLOADING": "```Medya indiriliyor & meme yapılıyor...```"
         },
         "removebg": {
             "REMOVEBG_DESC": "Şəklin arxa-planını silər.",
@@ -109,7 +178,11 @@
             "YT_DESC": "YouTube'dan axtarış edər.",
             "NEED_WORDS": "```Xahiş edirəm bir neçə söz yazın!```",
             "GETTING_VIDEOS": "```Videoları gətirirəm```",
-            "NOT_FOUND": "*Heçbir şey tapabilmədim :(*"
+            "NOT_FOUND": "*Heçbir şey tapabilmədim :(*",
+            "SEARCHING": "*🔎 İstintaq...*",
+            "WIKI_DESC": "Vikipediyada axtarış aparır.",
+            "IMG_DESC": "Google resimler fotoğraf çeker.",
+            "IMG": "```{}``` adet ```{}``` fotoğrafı yükleniyor..."
         },
         "sticker": {
             "STICKER_DESC": "Cavap verdiyiniz şəkili vəya videoyu Sticker çevirin.",

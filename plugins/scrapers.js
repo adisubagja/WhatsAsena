@@ -16,7 +16,7 @@ const ExchangeRatesError = require('exchange-rates-api/src/exchange-rates-error.
 //============================== TTS ==================================================
 const fs = require('fs');
 const https = require('https');
-const googleTTS = require('google-tts-api');
+const googleTTS = require('google-translate-tts');
 //=====================================================================================
 //============================== YOUTUBE ==============================================
 const ytdl = require('ytdl-core');
@@ -34,9 +34,12 @@ const spotifyApi = new SpotifyWebApi({
 const Language = require('../language');
 const Lang = Language.getString('scrapers');
 
+const wiki = require('wikijs').default;
+var gis = require('g-i-s');
+
 Asena.addCommand({pattern: 'trt(?: |$)(\\S*) ?(\\S*)', desc: Lang.TRANSLATE_DESC, usage: Lang.TRANSLATE_USAGE, fromMe: true}, (async (message, match) => {
     if (!message.reply_message) {
-        return await message.reply(Lang.NEED_REPLY);
+        return await message.client.sendMessage(message.jid,Lang.NEED_REPLY,MessageType.text);
     }
 
     ceviri = await translatte(message.reply_message.message, {from: match[1] === '' ? 'auto' : match[1], to: match[2] === '' ? config.LANG : match[2]});
@@ -45,13 +48,13 @@ Asena.addCommand({pattern: 'trt(?: |$)(\\S*) ?(\\S*)', desc: Lang.TRANSLATE_DESC
         + '*◀️ ' + Lang.FROM + '*: ```' + (match[2] === '' ? config.LANG : match[2]) + '```\n'
         + '*🔎 ' + Lang.RESULT + ':* ```' + ceviri.text + '```');
     } else {
-        return await message.reply(Lang.TRANSLATE_ERROR)
+        return await message.client.sendMessage(message.jid,Lang.TRANSLATE_ERROR,MessageType.text)
     }
 }));
 
 Asena.addCommand({pattern: 'currency(?: ([0-9.]+) ([a-zA-Z]+) ([a-zA-Z]+)|$|(.*))', fromMe: true}, (async (message, match) => {
     if(match[1] === undefined || match[2] == undefined || match[3] == undefined) {
-        return await message.reply(Lang.CURRENCY_ERROR);
+        return await message.client.sendMessage(message.jid,Lang.CURRENCY_ERROR,MessageType.text);
     }
     let opts = {
         amount: parseFloat(match[1]).toFixed(2).replace(/\.0+$/,''),
@@ -65,9 +68,9 @@ Asena.addCommand({pattern: 'currency(?: ([0-9.]+) ([a-zA-Z]+) ([a-zA-Z]+)|$|(.*)
     }
     catch(err) {
         if (err instanceof ExchangeRatesError) 
-            await message.reply(Lang.INVALID_CURRENCY)
+            await message.client.sendMessage(message.jid,Lang.INVALID_CURRENCY,MessageType.text)
         else {
-            await message.reply(Lang.UNKNOWN_ERROR)
+            await message.client.sendMessage(message.jid,Lang.UNKNOWN_ERROR,MessageType.text)
             console.log(err)
         }
     }
@@ -91,43 +94,19 @@ Asena.addCommand({pattern: 'tts (.*)', fromMe: true, desc: Lang.TTS_DESC}, (asyn
         ttsMessage = ttsMessage.replace(speedMatch[0], "")
     }
     
-    let url = await googleTTS(ttsMessage, LANG, SPEED)
-    const filePath = "translate_tts.mp3"
-    const file = fs.createWriteStream(filePath);
-    const request = https.get(url, async response => {
-        if (response.statusCode !== 200) {
-            await message.reply(Lang.TTS_ERROR)
-            fs.unlink(filePath, async () => {})
-            return;
-        }
-        fileInfo = {
-            mime: response.headers['content-type'],
-            size: parseInt(response.headers['content-length'], 10),
-        };
-        response.pipe(file);
+    var buffer = await googleTTS.synthesize({
+        text: ttsMessage,
+        voice: LANG
     });
-    file.on('finish', async () => {
-        const buffer = fs.readFileSync(filePath)
-        await message.sendMessage(buffer, MessageType.audio, {mimetype: Mimetype.mp4Audio, ptt: true});
-        fs.unlink(filePath, async () => {})
-    });
-    let error = async function(err) {
-        console.log(err)
-        fs.unlink(filePath, async () => {
-            await message.reply(Lang.TTS_ERROR)
-        });
-    }
-    request.on('error', error)
-    file.on('error', error)
-    request.end();
+    await message.client.sendMessage(message.jid,buffer, MessageType.audio, {mimetype: Mimetype.mp4Audio, ptt: true});
 }));
 
 Asena.addCommand({pattern: 'song ?(.*)', fromMe: true, desc: Lang.SONG_DESC}, (async (message, match) => { 
-    if (match[1] === '') return await message.sendMessage(Lang.NEED_TEXT_SONG);    
+    if (match[1] === '') return await message.client.sendMessage(message.jid,Lang.NEED_TEXT_SONG,MessageType.text);    
     let arama = await yts(match[1]);
     arama = arama.all;
-    if(arama.length < 1) return await message.sendMessage(Lang.NO_RESULT);
-    var reply = await message.sendMessage(Lang.DOWNLOADING_SONG);
+    if(arama.length < 1) return await message.client.sendMessage(message.jid,Lang.NO_RESULT,MessageType.text);
+    var reply = await message.client.sendMessage(message.jid,Lang.DOWNLOADING_SONG,MessageType.text);
 
     let title = arama[0].title.replace(' ', '+');
     let stream = ytdl(arama[0].videoId, {
@@ -149,41 +128,39 @@ Asena.addCommand({pattern: 'song ?(.*)', fromMe: true, desc: Lang.SONG_DESC}, (a
                 });
             writer.addTag();
 
-            reply = await message.reply(Lang.UPLOADING_SONG);
-            await message.sendMessage(Buffer.from(writer.arrayBuffer), MessageType.audio, {mimetype: Mimetype.mp4Audio, ptt: false});
+            reply = await message.client.sendMessage(message.jid,Lang.UPLOADING_SONG,MessageType.text);
+            await message.client.sendMessage(message.jid,Buffer.from(writer.arrayBuffer), MessageType.audio, {mimetype: Mimetype.mp4Audio, ptt: false});
         });
 }));
 
 Asena.addCommand({pattern: 'video ?(.*)', fromMe: true, desc: Lang.VIDEO_DESC}, (async (message, match) => { 
-    if (match[1] === '') return await message.sendMessage(Lang.NEED_VIDEO);    
+    if (match[1] === '') return await message.client.sendMessage(message.jid,Lang.NEED_VIDEO,MessageType.text);    
     
     try {
         var arama = await yts({videoId: ytdl.getURLVideoID(match[1])});
     } catch {
-        return await message.sendMessage(Lang.NO_RESULT);
+        return await message.client.sendMessage(message.jid,Lang.NO_RESULT,MessageType.text);
     }
 
-    var reply = await message.reply(Lang.DOWNLOADING_VIDEO);
+    var reply = await message.client.sendMessage(message.jid,Lang.DOWNLOADING_VIDEO,MessageType.text);
 
     var yt = ytdl(arama.videoId, {filter: format => format.container === 'mp4' && ['720p', '480p', '360p', '240p', '144p'].map(() => true)});
     yt.pipe(fs.createWriteStream('./' + arama.videoId + '.mp4'));
 
     yt.on('end', async () => {
-        await reply.delete();
-        reply = await message.reply(Lang.UPLOADING_VIDEO);
-        await message.sendMessage(fs.readFileSync('./' + arama.videoId + '.mp4'), MessageType.video, {mimetype: Mimetype.mp4});
-        await reply.delete();
+        reply = await message.client.sendMessage(message.jid,Lang.UPLOADING_VIDEO,MessageType.text);
+        await message.client.sendMessage(message.jid,fs.readFileSync('./' + arama.videoId + '.mp4'), MessageType.video, {mimetype: Mimetype.mp4});
     });
 }));
 
 Asena.addCommand({pattern: 'yt ?(.*)', fromMe: true, desc: Lang.YT_DESC}, (async (message, match) => { 
-    if (match[1] === '') return await message.sendMessage(Lang.NEED_WORDS);    
-    var reply = await message.reply(Lang.GETTING_VIDEOS);
+    if (match[1] === '') return await message.client.sendMessage(message.jid,Lang.NEED_WORDS,MessageType.text);    
+    var reply = await message.client.sendMessage(message.jid,Lang.GETTING_VIDEOS,MessageType.text);
 
     try {
         var arama = await yts(match[1]);
     } catch {
-        return await message.sendMessage(Lang.NOT_FOUND);
+        return await message.client.sendMessage(message.jid,Lang.NOT_FOUND,MessageType.text);
     }
     
     var mesaj = '';
@@ -191,6 +168,34 @@ Asena.addCommand({pattern: 'yt ?(.*)', fromMe: true, desc: Lang.YT_DESC}, (async
         mesaj += '*' + video.title + '* - ' + video.url + '\n'
     });
 
-    await message.sendMessage(mesaj);
+    await message.client.sendMessage(message.jid,mesaj,MessageType.text);
     await reply.delete();
+}));
+
+Asena.addCommand({pattern: 'wiki ?(.*)', fromMe: true, desc: Lang.WIKI_DESC}, (async (message, match) => { 
+    if (match[1] === '') return await message.client.sendMessage(message.jid,Lang.NEED_WORDS,MessageType.text);    
+    var reply = await message.client.sendMessage(message.jid,Lang.SEARCHING,MessageType.text);
+
+    var arama = await wiki({ apiUrl: 'https://' + config.LANG + '.wikipedia.org/w/api.php' })
+        .page(match[1]);
+
+    var info = await arama.rawContent();
+    await message.client.sendMessage(message.jid, info, MessageType.text);
+    await reply.delete();
+}));
+
+Asena.addCommand({pattern: 'img ?(.*)', fromMe: true, desc: Lang.IMG_DESC}, (async (message, match) => { 
+    if (match[1] === '') return await message.client.sendMessage(message.jid,Lang.NEED_WORDS,MessageType.text);
+    gis(match[1], async (error, result) => {
+        for (var i = 0; i < (result.length < 5 ? result.length : 5); i++) {
+            var get = got(result[i].url, {https: {rejectUnauthorized: false}});
+            var stream = get.buffer();
+                
+            stream.then(async (image) => {
+                await message.client.sendMessage(message.jid,image, MessageType.image);
+            });
+        }
+
+        message.reply(Lang.IMG.format((result.length < 5 ? result.length : 5), match[1]));
+    });
 }));
